@@ -92,6 +92,26 @@ ul {
   display: none;
 }
 
+.chat.page .left-nav {
+  background-color: #D8D8D8;
+  width: 15%;
+  margin: 0;
+  height: 100%;
+  float: left;
+  padding-top: 50px;
+  padding-bottom: 70px;
+}
+
+/*.usernameLabel {
+  margin-left: 20px;
+}*/
+
+.MyUsername {
+  /*margin-right: 20px;*/
+  margin-left: 30%;
+  color: #4A90E2;
+}
+
 /* Font */
 
 .messages {

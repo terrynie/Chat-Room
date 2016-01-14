@@ -45,7 +45,7 @@ $(function() {
       $chatPage.show();
       $loginPage.off('click');
       $currentInput = $inputMessage.focus();
-
+      $('.MyUsername').text(username);
       // Tell the server your username
       socket.emit('add user', username);
     }
