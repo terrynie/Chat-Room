@@ -15,6 +15,8 @@ app.use(express.static(__dirname + '/public'));
 // Chatroom
 
 var numUsers = 0;
+//all users online
+var users = [];
 
 io.on('connection', function (socket) {
   var addedUser = false;
@@ -37,13 +39,17 @@ io.on('connection', function (socket) {
     ++numUsers;
     addedUser = true;
     socket.emit('login', {
-      numUsers: numUsers
+      numUsers: numUsers,
+      //sent all users online to new user
+      users: users
     });
     // echo globally (all clients) that a person has connected
     socket.broadcast.emit('user joined', {
       username: socket.username,
-      numUsers: numUsers
     });
+    // record every users online
+    // if push username first, your username will in yourself list
+    users.push(username);
   });
 
   // when the client emits 'typing', we broadcast it to others
@@ -62,13 +68,14 @@ io.on('connection', function (socket) {
 
   // when the user disconnects.. perform this
   socket.on('disconnect', function () {
+  	var pos = users.indexOf(socket.username);
     if (addedUser) {
       --numUsers;
-
+      users.splice(pos, 1);
       // echo globally that this client has left
       socket.broadcast.emit('user left', {
         username: socket.username,
-        numUsers: numUsers
+        index: pos,
       });
     }
   });

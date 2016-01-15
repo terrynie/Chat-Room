@@ -12,9 +12,9 @@ $(function() {
   var $usernameInput = $('.usernameInput'); // Input for username
   var $messages = $('.messages'); // Messages area
   var $inputMessage = $('.inputMessage'); // Input message input box
-
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
+  var $usersOnline = $('.users');  //The users online list
 
   // Prompt for setting a username
   var username;
@@ -25,6 +25,8 @@ $(function() {
 
   var socket = io();
 
+
+  // log partivipants message when user log in
   function addParticipantsMessage (data) {
     var message = '';
     if (data.numUsers === 1) {
@@ -34,6 +36,25 @@ $(function() {
     }
     log(message);
   }
+
+  // add new joined user to user list
+  function addNewJoinedUser (data){
+    var $usersDiv = $('<div class="usersItem"/>').text(data.username).css('color', '#000000');
+    addUserElement($usersDiv);
+  }
+
+
+  // add users to users online when user login
+  function addUsersOnlineWhenLogin (data) {
+    if (data.numUsers == 1) {}
+      else {
+        for (var i = 0; i < data.numUsers; i++) {  
+          var $usersDiv = $('<div class="usersItem"/>').text(data.users[i]).css('color', '#000000');
+          addUserElement($usersDiv);
+        };
+      }
+  }
+
 
   // Sets the client's username
   function setUsername () {
@@ -50,6 +71,35 @@ $(function() {
       socket.emit('add user', username);
     }
   }
+
+
+  // add new user to users online list
+  function addUserElement (el, options) {
+    var $el = $(el);
+
+    // Setup default options
+    if (!options) {
+      options = {};
+    }
+    if (typeof options.fade === 'undefined') {
+      options.fade = true;
+    }
+    if (typeof options.prepend === 'undefined') {
+      options.prepend = false;
+    }
+
+    // Apply options
+    if (options.fade) {
+      $el.hide().fadeIn(FADE_TIME);
+    }
+    if (options.prepend) {
+      $usersOnline.prepend($el);
+    } else {
+      $usersOnline.append($el);
+    }
+    $usersOnline[0].scrollTop = $usersOnline[0].scrollHeight;
+  }
+
 
   // Sends a chat message
   function sendMessage () {
@@ -68,11 +118,13 @@ $(function() {
     }
   }
 
+
   // Log a message
   function log (message, options) {
     var $el = $('<li>').addClass('log').text(message);
     addMessageElement($el, options);
   }
+
 
   // Adds the visual chat message to the message list
   function addChatMessage (data, options) {
@@ -99,6 +151,7 @@ $(function() {
     addMessageElement($messageDiv, options);
   }
 
+
   // Adds the visual chat typing message
   function addChatTyping (data) {
     data.typing = true;
@@ -106,12 +159,14 @@ $(function() {
     addChatMessage(data);
   }
 
+
   // Removes the visual chat typing message
   function removeChatTyping (data) {
     getTypingMessages(data).fadeOut(function () {
       $(this).remove();
     });
   }
+
 
   // Adds a message element to the messages and scrolls to the bottom
   // el - The element to add as a message
@@ -144,10 +199,12 @@ $(function() {
     $messages[0].scrollTop = $messages[0].scrollHeight;
   }
 
+
   // Prevents input from having injected markup
   function cleanInput (input) {
     return $('<div/>').text(input).text();
   }
+
 
   // Updates the typing event
   function updateTyping () {
@@ -169,12 +226,14 @@ $(function() {
     }
   }
 
+
   // Gets the 'X is typing' messages of a user
   function getTypingMessages (data) {
     return $('.typing.message').filter(function (i) {
       return $(this).data('username') === data.username;
     });
   }
+
 
   // Gets the color of a username through our hash function
   function getUsernameColor (username) {
@@ -188,8 +247,8 @@ $(function() {
     return COLORS[index];
   }
 
-  // Keyboard events
 
+  // Keyboard events
   $window.keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
@@ -206,6 +265,7 @@ $(function() {
       }
     }
   });
+
 
   $inputMessage.on('input', function() {
     updateTyping();
@@ -234,6 +294,7 @@ $(function() {
       prepend: true
     });
     addParticipantsMessage(data);
+    addUsersOnlineWhenLogin(data);
   });
 
   // Whenever the server emits 'new message', update the chat body
@@ -245,6 +306,8 @@ $(function() {
   socket.on('user joined', function (data) {
     log(data.username + ' joined');
     addParticipantsMessage(data);
+    addNewJoinedUser(data);
+
   });
 
   // Whenever the server emits 'user left', log it in the chat body
